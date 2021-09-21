@@ -1,0 +1,32 @@
+{
+  "name": "mapbox-terrain-mapping",
+  "version": "1.0.0",
+  "description": "mapbox terrain mapping",
+  "private": true,
+  "scripts": {
+    "build": "webpack --progress --mode=development",
+    "serve": "webpack-dev-server --mode=development"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mike-starr/mapbox-terrain-mapping.git"
+  },
+  "author": "Mike Starr",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mike-starr/mapbox-terrain-mapping/issues"
+  },
+  "homepage": "https://github.com/mike-starr/mapbox-terrain-mapping#readme",
+  "devDependencies": {
+    "html-webpack-plugin": "^5.3.2",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.4.3",
+    "webpack": "^5.53.0",
+    "webpack-cli": "^4.8.0",
+    "webpack-dev-server": "^4.2.1"
+  },
+  "dependencies": {
+    "@types/three": "^0.131.1",
+    "three": "^0.132.2"
+  }
+}
