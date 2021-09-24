@@ -1,34 +1,50 @@
 export default class TileData {
-  constructor(private readonly imageData: ImageData) {}
+  private readonly heightData: Float32Array;
+  private readonly _minHeight: number;
+  private readonly _maxHeight: number;
 
-  get width() {
-    return this.imageData.width;
+  constructor(imageData: ImageData) {
+    this.heightData = new Float32Array(imageData.width * imageData.height);
+
+    this._minHeight = this._maxHeight = this.heightFromPixels(
+      imageData.data[0],
+      imageData.data[1],
+      imageData.data[2]
+    );
+
+    for (let i = 0; i < this.heightData.length; ++i) {
+      const imageDataArrayOffset = i * 4;
+
+      this.heightData[i] = this.heightFromPixels(
+        imageData.data[imageDataArrayOffset],
+        imageData.data[imageDataArrayOffset + 1],
+        imageData.data[imageDataArrayOffset + 2]
+      );
+
+      this._minHeight = Math.min(this.minHeight, this.heightData[i]);
+      this._maxHeight = Math.max(this.maxHeight, this.heightData[i]);
+    }
   }
 
-  get height() {
-    return this.imageData.height;
+  get minHeight() {
+    return this._minHeight;
   }
 
-  heightAtCoords(x: number, y: number): number {
-    // Convert the x/y coordinate into a one-dimensional pixel index.
-    const pixelIndex = x + y * this.imageData.width;
+  get maxHeight() {
+    return this._maxHeight;
+  }
 
-    // Calculate the offset into the array: pixelIndex * elements per pixel.
-    const arrayOffset = pixelIndex * 4;
-
-    if (arrayOffset >= this.imageData.data.length) {
-      console.warn(`Requested pixel x:${x} y:${y} is out of range.`);
-      return 0;
+  copyTo(target: Float32Array) {
+    if (target.length !== this.heightData.length) {
+      throw new Error("TileData#copyTo array size mismatch.");
     }
 
-    // Calculate elevation as specified in the MapBox API:
-    // https://docs.mapbox.com/help/troubleshooting/access-elevation-data/
-    return (
-      -10000 +
-      (this.imageData.data[arrayOffset] * 256 * 256 +
-        this.imageData.data[arrayOffset + 1] * 256 +
-        this.imageData.data[arrayOffset + 2]) *
-        0.1
-    );
+    target.set(this.heightData);
+  }
+
+  // Calculates height per the MapBox API:
+  // https://docs.mapbox.com/help/troubleshooting/access-elevation-data/
+  private heightFromPixels(r: number, g: number, b: number): number {
+    return -10000 + (r * 256 * 256 + g * 256 + b) * 0.1;
   }
 }
