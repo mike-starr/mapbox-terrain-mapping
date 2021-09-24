@@ -5,9 +5,28 @@ const baseMapboxUrl = "https://api.mapbox.com/v4/mapbox.terrain-rgb";
 const accessToken =
   "pk.eyJ1IjoibXN0YXJyIiwiYSI6ImNrdHU0bjVpbjF3Y2Iyb28yZXp4cmVoZGcifQ.8-2jWyfD910ZNyZepH8jgw";
 
+/**
+ * Retrieves tile data from the MapBox API.
+ */
 export default class TileRetriever {
+  /**
+   * @param canvas Canvas element to be used to process the retrieved image.
+   */
   constructor(private readonly canvas: HTMLCanvasElement) {}
 
+  /**
+   * Requests a tile from the MapBox API for the desired location/zoom
+   * and converts it to a {@link TileData} object.
+   *
+   * Calling this function successively before a prior request has completed
+   * will produce non-deterministic results; the canvas used for processing
+   * the image is shared between all requests.
+   *
+   * @param longitude Longitude of desired location.
+   * @param latitude Latitude of desired location.
+   * @param zoom Zoom level per MapBox.
+   * @returns A {@link TileData} object for the requested location.
+   */
   async retrieveTile(
     longitude: number,
     latitude: number,
@@ -19,6 +38,12 @@ export default class TileRetriever {
     return this.tileDataFromImage(image);
   }
 
+  /**
+   * Loads an image from a URL into an image element.
+   *
+   * @param url The URL.
+   * @returns An HTMLImageElement containing the requested image.
+   */
   private loadImageFromUrl(url: string): Promise<HTMLImageElement> {
     const image = new Image();
     image.crossOrigin = "Anonymous";
@@ -30,6 +55,12 @@ export default class TileRetriever {
     });
   }
 
+  /**
+   * Extracts image data from an HTMLImageElement.
+   *
+   * @param image HTMLImageElement containing the image.
+   * @returns A {@link TileData} object initialized with the image.
+   */
   private tileDataFromImage(image: HTMLImageElement) {
     this.canvas.width = image.width;
     this.canvas.height = image.height;

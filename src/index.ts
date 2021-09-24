@@ -20,8 +20,15 @@ const latitudeInput = document.getElementById(
 
 const zoomInput = document.getElementById("input-zoom") as HTMLInputElement;
 
+const shadingSelector = document.getElementById(
+  "select-shading"
+) as HTMLSelectElement;
+
+// Create the scene.
 const scene = new TerrainMapScene(outputCanvas, tileCanvas);
 
+// Set up an event listener on the Update button to trigger
+// an update of the scene's data.
 updateButton.addEventListener("click", async () => {
   try {
     updateButton.disabled = true;
@@ -35,6 +42,18 @@ updateButton.addEventListener("click", async () => {
   }
 });
 
+shadingSelector.addEventListener("change", () => {
+  switch (shadingSelector.value) {
+    case "gradient":
+    case "sourceTexture":
+      scene.shadingMode = shadingSelector.value;
+      break;
+    default:
+      throw new Error("Invalid shading mode.");
+  }
+});
+
+// Animation frame callback to update/render the scene.
 let lastTime = -1;
 const animate = (timestamp: number) => {
   const elapsed = lastTime < 0 ? 0 : timestamp - lastTime;

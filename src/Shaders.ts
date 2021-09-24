@@ -37,4 +37,14 @@ export default class Shaders {
       pc_fragColor = vec4(normalizedHeight, 0.1, 1.0 - normalizedHeight, 1.0);
       //pc_fragColor = texture( sourceTexture, vUv );
     }`;
+
+  public static readonly TerrainMapTexturedFragmentShader = `
+    in vec2 vUv;
+    in float height;
+
+    uniform sampler2D sourceTexture;
+
+    void main() {
+      pc_fragColor = texture( sourceTexture, vUv );
+    }`;
 }
