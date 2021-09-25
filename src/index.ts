@@ -1,4 +1,5 @@
 import TerrainMapScene from "./TerrainMapScene";
+import TileRetriever from "./TileRetriever";
 
 const outputCanvas = document.getElementById(
   "threejs-canvas"
@@ -24,19 +25,33 @@ const shadingSelector = document.getElementById(
   "select-shading"
 ) as HTMLSelectElement;
 
-// Create the scene.
+const errorMessage = document.getElementById("error-message") as HTMLDivElement;
+
 const scene = new TerrainMapScene(outputCanvas, tileCanvas);
+const tileRetriever = new TileRetriever(tileCanvas);
 
 // Set up an event listener on the Update button to trigger
 // an update of the scene's data.
 updateButton.addEventListener("click", async () => {
   try {
+    errorMessage.hidden = true;
     updateButton.disabled = true;
-    await scene.loadTile(
+
+    const tileData = await tileRetriever.retrieveTile(
       parseFloat(longitudeInput.value),
       parseFloat(latitudeInput.value),
       parseFloat(zoomInput.value)
     );
+
+    scene.loadTile(tileData);
+  } catch {
+    // When a tile fetch fails, clear the source image canvas and
+    // tell the scene to zero out the height map.
+    tileCanvas
+      .getContext("2d")
+      ?.clearRect(0, 0, tileCanvas.width, tileCanvas.height);
+    scene.clear();
+    errorMessage.hidden = false;
   } finally {
     updateButton.disabled = false;
   }

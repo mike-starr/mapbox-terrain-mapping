@@ -10,20 +10,33 @@
     </style>
   </head>
   <body>
-    <canvas id="threejs-canvas" width="800" height="600"></canvas><br />
-    Longitude:
-    <input id="input-longitude" type="text" value="-121.7603" />&nbsp;
-    Lattitude: <input id="input-latitude" type="text" value="46.8523" />&nbsp;
-    Zoom: <input id="input-zoom" type="text" value="10" />&nbsp;<input
-      id="button-update"
-      type="button"
-      value="Update"
-    /><hr />
-    Shading: <select id="select-shading">
-        <option value="gradient">Gradient</option>
-        <option value="sourceTexture">Source Texture</option>
-      </select>
-    <br />
-    <canvas id="tile-canvas" width="256" height="256"></canvas>
+    <div id="container" style="position: relative; height: 100%; width: 100%">
+      <div id="main-canvas" style="position: absolute; width: 800px">
+        <canvas id="threejs-canvas" width="800" height="600"></canvas>
+      </div>
+      <div id="controls" style="position: absolute; left: 800px; padding: 4px">
+        Longitude:
+        <input id="input-longitude" type="text" value="-121.7603" /><br /><br />
+        Lattitude:
+        <input id="input-latitude" type="text" value="46.8523" /><br /><br />
+        Zoom:
+        <input id="input-zoom" type="text" value="11" /><br />
+        <br />
+        <input id="button-update" type="button" value="Update" /><br /><br />
+        <div id="error-message" style="color: red;" hidden="true">Error retrieving tile.</div>
+        <hr />
+        <br />
+        Shading:
+        <select id="select-shading">
+          <option value="gradient">Gradient</option>
+          <option value="sourceTexture">Source Texture</option>
+        </select>
+        <br /><br />
+        <hr />
+        <br />
+        Source Image:<br />
+        <canvas id="tile-canvas" width="256" height="256"></canvas>
+      </div>
+    </div>
   </body>
 </html>

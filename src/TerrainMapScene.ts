@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import TileRetriever from "./TileRetriever";
 import Shaders from "./Shaders";
+import TileData from "./TileData";
 
 type ShadingMode = "gradient" | "sourceTexture";
 
@@ -11,7 +11,6 @@ const displacementTextureHeight = 256;
  * Maintains the threejs scene used to render the hightmap data.
  */
 export default class TerrainMapScene {
-  private readonly tileRetriever: TileRetriever;
   private readonly scene: THREE.Scene;
   private readonly camera: THREE.Camera;
   private readonly renderer: THREE.Renderer;
@@ -33,11 +32,8 @@ export default class TerrainMapScene {
 
   /**
    * @param outputCanvas Canvas used to render the hight-mapped mesh.
-   * @param tileCanvas Canvas used to render the raw tile image retrieved from MapBox.
    */
   constructor(outputCanvas: HTMLCanvasElement, tileCanvas: HTMLCanvasElement) {
-    this.tileRetriever = new TileRetriever(tileCanvas);
-
     // Initialize all the persistent threejs objects.
     this.scene = new THREE.Scene();
     this.renderer = new THREE.WebGLRenderer({
@@ -74,7 +70,9 @@ export default class TerrainMapScene {
       THREE.FloatType,
       THREE.UVMapping,
       THREE.ClampToEdgeWrapping,
-      THREE.ClampToEdgeWrapping
+      THREE.ClampToEdgeWrapping,
+      THREE.LinearFilter,
+      THREE.LinearFilter
     );
 
     this.displacementTexture.generateMipmaps = false;
@@ -107,51 +105,47 @@ export default class TerrainMapScene {
   }
 
   /**
-   * Triggers an update of the rendered tile data. Any failures encountered
-   * in the process (error from mapbox API, invalid input, etc.) will result
-   * in a zero-height mesh being rendered.
+   * Updates the scene with the provided tile data.
    *
-   * @param longitude Longitude of desired location.
-   * @param latitude Latitude of desired location.
-   * @param zoom Desired zoom level.
+   * @param tileData The tile data.
    */
-  async loadTile(longitude: number, latitude: number, zoom: number) {
-    let minHeight = 0;
-    let maxHeight = 0;
-
-    try {
-      const tileData = await this.tileRetriever.retrieveTile(
-        longitude,
-        latitude,
-        zoom
-      );
-
-      minHeight = tileData.minHeight;
-      maxHeight = tileData.maxHeight;
-      tileData.copyTo(this.displacementTextureData);
-    } catch (error) {
-      console.log(
-        `Failed to retrieve tile at lon: ${longitude} lat: ${latitude} zoom: ${zoom}`
-      );
-      this.displacementTextureData.fill(0);
-    }
+  loadTile(tileData: TileData) {
+    tileData.copyTo(this.displacementTextureData);
 
     this.heightMapMaterial.uniforms["displacementMinHeight"] = {
-      value: minHeight
+      value: tileData.minHeight
     };
 
     this.heightMapMaterial.uniforms["displacementMaxHeight"] = {
-      value: maxHeight
+      value: tileData.maxHeight
     };
 
     // Height map values are normalized to a range that displays nicely,
-    // from 0.0 to 1.5. A value of 1.0 is used when there's no height variation;
+    // from 0.0 to 1.5. A scale value of 1 is used when there's no height variation;
     // scaling is irrelevant when all heights are 0.
-    const heightRange = maxHeight - minHeight;
+    const heightRange = tileData.maxHeight - tileData.minHeight;
     this.heightMapMaterial.uniforms["displacementScale"] = {
-      value: 1.5 / (heightRange === 0 ? 1 : heightRange)
+      value: heightRange === 0 ? 1 : 1.5 / heightRange
     };
 
+    this.displacementTexture.needsUpdate = true;
+    this.heightMapMaterial.needsUpdate = true;
+    this.sourceTexture.needsUpdate = true;
+  }
+
+  /**
+   * Resets the scene to a zero-height map.
+   */
+  clear() {
+    this.heightMapMaterial.uniforms["displacementMinHeight"] = {
+      value: 0
+    };
+
+    this.heightMapMaterial.uniforms["displacementMaxHeight"] = {
+      value: 0
+    };
+
+    this.displacementTextureData.fill(0);
     this.displacementTexture.needsUpdate = true;
     this.heightMapMaterial.needsUpdate = true;
     this.sourceTexture.needsUpdate = true;
