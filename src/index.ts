@@ -50,17 +50,20 @@ updateButton.addEventListener("click", async () => {
     tileCanvas
       .getContext("2d")
       ?.clearRect(0, 0, tileCanvas.width, tileCanvas.height);
-    scene.clear();
+    scene.reset();
     errorMessage.hidden = false;
   } finally {
     updateButton.disabled = false;
   }
 });
 
+// Change shading mode per selector.
 shadingSelector.addEventListener("change", () => {
   switch (shadingSelector.value) {
     case "gradient":
     case "sourceTexture":
+    case "normals":
+    case "lighting":
       scene.shadingMode = shadingSelector.value;
       break;
     default:

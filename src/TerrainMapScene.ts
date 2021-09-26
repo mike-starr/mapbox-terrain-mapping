@@ -1,8 +1,7 @@
 import * as THREE from "three";
 import Shaders from "./Shaders";
-import TileData from "./TileData";
 
-type ShadingMode = "gradient" | "sourceTexture";
+type ShadingMode = "gradient" | "sourceTexture" | "normals" | "lighting";
 
 const displacementTextureWidth = 256;
 const displacementTextureHeight = 256;
@@ -28,6 +27,7 @@ export default class TerrainMapScene {
   // selected shading mode.
   private readonly heightMapMaterial: THREE.ShaderMaterial;
 
+  // Selected shading mode.
   private _shadingMode: ShadingMode = "gradient";
 
   /**
@@ -84,9 +84,7 @@ export default class TerrainMapScene {
       uniforms: {
         sourceTexture: { value: this.sourceTexture },
         displacementTexture: { value: this.displacementTexture },
-        displacementMinHeight: { value: 0 },
-        displacementMaxHeight: { value: 1 },
-        displacementScale: { value: 1 }
+        displacementTextureSize: { value: displacementTextureWidth }
       },
       vertexShader: Shaders.TerrainMapVertexShader,
       fragmentShader: Shaders.TerrainMapGradientFragmentShader
@@ -107,26 +105,38 @@ export default class TerrainMapScene {
   /**
    * Updates the scene with the provided tile data.
    *
-   * @param tileData The tile data.
+   * @param tileImageData The tile data.
    */
-  loadTile(tileData: TileData) {
-    tileData.copyTo(this.displacementTextureData);
+  loadTile(tileImageData: ImageData) {
+    // Convert the image data to a height map, storing the minimum
+    // and maximum heights in the process.
+    let minHeight = this.heightFromPixels(
+      tileImageData.data[0],
+      tileImageData.data[1],
+      tileImageData.data[2]
+    );
+    let maxHeight = minHeight;
 
-    this.heightMapMaterial.uniforms["displacementMinHeight"] = {
-      value: tileData.minHeight
-    };
+    for (let i = 0; i < this.displacementTextureData.length; ++i) {
+      const imageDataArrayOffset = i * 4;
 
-    this.heightMapMaterial.uniforms["displacementMaxHeight"] = {
-      value: tileData.maxHeight
-    };
+      this.displacementTextureData[i] = this.heightFromPixels(
+        tileImageData.data[imageDataArrayOffset],
+        tileImageData.data[imageDataArrayOffset + 1],
+        tileImageData.data[imageDataArrayOffset + 2]
+      );
 
-    // Height map values are normalized to a range that displays nicely,
-    // from 0.0 to 1.5. A scale value of 1 is used when there's no height variation;
-    // scaling is irrelevant when all heights are 0.
-    const heightRange = tileData.maxHeight - tileData.minHeight;
-    this.heightMapMaterial.uniforms["displacementScale"] = {
-      value: heightRange === 0 ? 1 : 1.5 / heightRange
-    };
+      minHeight = Math.min(minHeight, this.displacementTextureData[i]);
+      maxHeight = Math.max(maxHeight, this.displacementTextureData[i]);
+    }
+
+    // Normalize the height map from [0.0, 1.0].
+    const heightRange = maxHeight - minHeight;
+    const normalizationFactor = heightRange === 0 ? 1 : heightRange;
+    for (let i = 0; i < this.displacementTextureData.length; ++i) {
+      this.displacementTextureData[i] =
+        (this.displacementTextureData[i] - minHeight) / normalizationFactor;
+    }
 
     this.displacementTexture.needsUpdate = true;
     this.heightMapMaterial.needsUpdate = true;
@@ -136,18 +146,9 @@ export default class TerrainMapScene {
   /**
    * Resets the scene to a zero-height map.
    */
-  clear() {
-    this.heightMapMaterial.uniforms["displacementMinHeight"] = {
-      value: 0
-    };
-
-    this.heightMapMaterial.uniforms["displacementMaxHeight"] = {
-      value: 0
-    };
-
+  reset() {
     this.displacementTextureData.fill(0);
     this.displacementTexture.needsUpdate = true;
-    this.heightMapMaterial.needsUpdate = true;
     this.sourceTexture.needsUpdate = true;
   }
 
@@ -167,6 +168,14 @@ export default class TerrainMapScene {
         this.heightMapMaterial.fragmentShader =
           Shaders.TerrainMapTexturedFragmentShader;
         break;
+      case "normals":
+        this.heightMapMaterial.fragmentShader =
+          Shaders.TerrainMapNormalsFragmentShader;
+        break;
+      case "lighting":
+        this.heightMapMaterial.fragmentShader =
+          Shaders.TerrainMapLightingFragmentShader;
+        break;
       default:
         throw new Error("Invalid shading mode.");
     }
@@ -180,7 +189,7 @@ export default class TerrainMapScene {
    * @param elapsedMs Frame time in milliseconds.
    */
   update(elapsedMs: number) {
-    this.mesh.rotation.z += (elapsedMs / 1000) * (Math.PI / 10);
+    this.mesh.rotation.z += elapsedMs * 0.001 * (Math.PI * 0.1);
   }
 
   /**
@@ -188,5 +197,18 @@ export default class TerrainMapScene {
    */
   render() {
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /**
+   * Calculates height of a single pixel per the MapBox API:
+   * https://docs.mapbox.com/help/troubleshooting/access-elevation-data/
+   *
+   * @param r Red channel of pixel.
+   * @param g Green channel of pixel.
+   * @param b Blue channel of pixel.
+   * @returns The height encoded in the supplied pixel.
+   */
+  private heightFromPixels(r: number, g: number, b: number): number {
+    return -10000 + (r * 256 * 256 + g * 256 + b) * 0.1;
   }
 }

@@ -1,5 +1,4 @@
 import * as tilebelt from "@mapbox/tilebelt";
-import TileData from "./TileData";
 
 const baseMapboxUrl = "https://api.mapbox.com/v4/mapbox.terrain-rgb";
 const accessToken =
@@ -16,7 +15,7 @@ export default class TileRetriever {
 
   /**
    * Requests a tile from the MapBox API for the desired location/zoom
-   * and converts it to a {@link TileData} object.
+   * and converts it to a {@link ImageData} object.
    *
    * Calling this function successively before a prior request has completed
    * will produce non-deterministic results; the canvas used for processing
@@ -25,13 +24,13 @@ export default class TileRetriever {
    * @param longitude Longitude of desired location.
    * @param latitude Latitude of desired location.
    * @param zoom Zoom level per MapBox.
-   * @returns A {@link TileData} object for the requested location.
+   * @returns An {@link ImageData} object for the requested location.
    */
   async retrieveTile(
     longitude: number,
     latitude: number,
     zoom: number
-  ): Promise<TileData> {
+  ): Promise<ImageData> {
     const tile = tilebelt.pointToTile(longitude, latitude, zoom);
     const tileUrl = `${baseMapboxUrl}/${tile[2]}/${tile[0]}/${tile[1]}.pngraw?access_token=${accessToken}`;
     const image = await this.loadImageFromUrl(tileUrl);
@@ -59,7 +58,7 @@ export default class TileRetriever {
    * Extracts image data from an HTMLImageElement.
    *
    * @param image HTMLImageElement containing the image.
-   * @returns A {@link TileData} object initialized with the image.
+   * @returns An {@link ImageData} object initialized with the image.
    */
   private tileDataFromImage(image: HTMLImageElement) {
     this.canvas.width = image.width;
@@ -68,6 +67,6 @@ export default class TileRetriever {
     const context = this.canvas.getContext("2d")!;
     context.drawImage(image, 0, 0);
 
-    return new TileData(context.getImageData(0, 0, image.width, image.height));
+    return context.getImageData(0, 0, image.width, image.height)
   }
 }
