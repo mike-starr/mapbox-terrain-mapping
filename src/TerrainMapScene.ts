@@ -3,8 +3,8 @@ import Shaders from "./Shaders";
 
 type ShadingMode = "gradient" | "sourceTexture" | "normals" | "lighting";
 
-const displacementTextureWidth = 256;
-const displacementTextureHeight = 256;
+const displacementTextureSize = 256;
+const planeLength = 4;
 
 /**
  * Maintains the threejs scene used to render the hightmap data.
@@ -47,7 +47,7 @@ export default class TerrainMapScene {
       1000
     );
 
-    this.geometry = new THREE.PlaneGeometry(4.0, 4.0, 256, 256);
+    this.geometry = new THREE.PlaneGeometry(planeLength, planeLength, 256, 256);
 
     this.sourceTexture = new THREE.CanvasTexture(
       tileCanvas,
@@ -59,13 +59,13 @@ export default class TerrainMapScene {
     );
 
     this.displacementTextureData = new Float32Array(
-      displacementTextureWidth * displacementTextureHeight
+      displacementTextureSize * displacementTextureSize
     );
 
     this.displacementTexture = new THREE.DataTexture(
       this.displacementTextureData,
-      displacementTextureWidth,
-      displacementTextureHeight,
+      displacementTextureSize,
+      displacementTextureSize,
       THREE.RedFormat,
       THREE.FloatType,
       THREE.UVMapping,
@@ -84,7 +84,7 @@ export default class TerrainMapScene {
       uniforms: {
         sourceTexture: { value: this.sourceTexture },
         displacementTexture: { value: this.displacementTexture },
-        displacementTextureSize: { value: displacementTextureWidth }
+        displacementTexelAspect: { value: displacementTextureSize / planeLength }
       },
       vertexShader: Shaders.TerrainMapVertexShader,
       fragmentShader: Shaders.TerrainMapGradientFragmentShader

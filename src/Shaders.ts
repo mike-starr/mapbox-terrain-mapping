@@ -5,10 +5,10 @@ export default class Shaders {
     out float height;
     out vec3 terrainNormal;
     uniform sampler2D displacementTexture;
-    uniform float displacementTextureSize;
+    uniform float displacementTexelAspect;
 
     // Adapted from http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.161.8979&rep=rep1&type=pdf
-    vec3 calculateNormal(sampler2D texture, vec2 uv, float textureSize) {
+    vec3 calculateNormal(sampler2D texture, vec2 uv, float texelAspect) {
       float l = textureOffset(texture, uv, ivec2(-1, 0)).r;
       float r = textureOffset(texture, uv, ivec2(1, 0)).r;
       float u = textureOffset(texture, uv, ivec2(0, 1)).r;
@@ -17,8 +17,8 @@ export default class Shaders {
       // Done in model-space of the plane, which is in the x-y plane
       // with its normal +z.
       vec3 n;
-      n.x = (l - r) * textureSize;
-      n.y = (d - u) * textureSize;
+      n.x = (l - r) * texelAspect;
+      n.y = (d - u) * texelAspect;
       n.z = 2.0;
       return normalize(n);
     }
@@ -30,7 +30,7 @@ export default class Shaders {
       vec4 worldPosition = modelMatrix * vec4(position, 1.0);
       vec4 displacedPosition = worldPosition + vec4(0, height, 0, 0);
 
-      terrainNormal = (modelMatrix * vec4(calculateNormal(displacementTexture, uv, displacementTextureSize), 0.0)).xyz;
+      terrainNormal = (modelMatrix * vec4(calculateNormal(displacementTexture, uv, displacementTexelAspect), 0.0)).xyz;
       gl_Position = projectionMatrix * viewMatrix * displacedPosition;
     }`;
 
