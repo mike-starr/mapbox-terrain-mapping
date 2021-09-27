@@ -23,7 +23,7 @@ export default class TerrainMapScene {
   private readonly displacementTexture: THREE.DataTexture;
   private readonly displacementTextureData: Float32Array;
 
-  // Material that deforms the mesh colors it based on the
+  // Material that deforms the mesh and colors it based on the
   // selected shading mode.
   private readonly heightMapMaterial: THREE.ShaderMaterial;
 
