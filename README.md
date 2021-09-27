@@ -10,19 +10,19 @@ Four shading modes are provided:
 
 **Gradient**: Colors the mesh by height. Blue at lower elevations, red at higher elevations.
 
-![Gradient](https://mike-starr.github.io/mapbox-terrain-mapping/gradient.png)
+![Gradient](https://mike-starr.github.io/mapbox-terrain-mapping/gradient.png?)
 
 **Source Texture**: Textures the mesh with the source image from MapBox.
 
-![Gradient](https://mike-starr.github.io/mapbox-terrain-mapping/texture.png)
+![Gradient](https://mike-starr.github.io/mapbox-terrain-mapping/texture.png?)
 
 **Normals**: Computes (approximate) normals from the height map and visualizes them as color values.
 
-![Gradient](https://mike-starr.github.io/mapbox-terrain-mapping/normals.png)
+![Gradient](https://mike-starr.github.io/mapbox-terrain-mapping/normals.png?)
 
 **Lighting**: Lights the mesh with a single directional light.
 
-![Gradient](https://mike-starr.github.io/mapbox-terrain-mapping/lighting.png)
+![Gradient](https://mike-starr.github.io/mapbox-terrain-mapping/lighting.png?)
 
 ## Building / Running
 ```npm install```
